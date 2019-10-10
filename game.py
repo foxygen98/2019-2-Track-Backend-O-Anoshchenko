@@ -13,40 +13,45 @@ class Tic_Tac_Toe:
             self.check_name(i)
         self.run_game()
 
+    def print_board(self):
+        print('-------------')
+        for i in range(9):
+            print('| ' + str(self.board[i]) + ' ', end='')
+            if (i + 1) % 3 == 0:
+                print('|')
+                print('-------------')
+
     def check_name(self, i):
         while(self.players[i] == ''):
             print('Имя не может быть пустой строкой! Попробуйте ещё раз.')
             self.players[i] = input()
 
     def one_move(self):
-        while self.move <= 4:
-            self.move += 1
-            for i in range(2):
-                print(self.players[i] + ', ваш ход')
-                move = self.check_input(input())
-                self.board[move - 1] = self.symbol[i]
-                self.print_board()
-                winner = self.check()
-                if winner:
-                    return winner
-                if self.move == 5:
-                    break
+        for i in range(2):
+            print(self.players[i] + ', ваш ход')
+            move = input()
+            check = self.check_input(move)
+            while(check != 0):
+                if check == 1:
+                    print('Пожалуйста, введите число от 1 до 9!')
+                    move = input()
+                elif check == 2:
+                    print('Место уже занято! Попробуйте еще раз.')
+                    move = input()
+                check = self.check_input(move)
+            self.board[int(move) - 1] = self.symbol[i]
+            self.print_board()
+            winner = self.check()
+            if winner or self.move == 5:
+                break
         return 0
 
     def check_input(self, move):
-        change = True
-        while(change):
-            change = False
-            while(not move.isdigit() or int(move) <= 0 or int(move) > 9):
-                print('Пожалуйста, введите число от 1 до 9!')
-                move = input()
-                change = True
-            while(self.board[int(move) - 1] != int(move)):
-                print('Место уже занято! Попробуйте еще раз.')
-                move = input()
-                change = True
-                break
-        return int(move)
+        if not move.isdigit() or int(move) <= 0 or int(move) > 9:
+            return 1
+        if self.board[int(move) - 1] != int(move):
+            return 2
+        return 0
 
     def who_win(self, i):
         if self.board[i] == 'X':
@@ -67,14 +72,6 @@ class Tic_Tac_Toe:
                     return self.who_win(4)
         return 0
 
-    def print_board(self):
-        print('-------------')
-        for i in range(9):
-            print('| ' + str(self.board[i]) + ' ', end='')
-            if (i + 1) % 3 == 0:
-                print('|')
-                print('-------------')
-
     def restart(self):
         self.board = list(range(1, 10))
         self.move = 0
@@ -83,7 +80,11 @@ class Tic_Tac_Toe:
 
     def run_game(self):
         self.print_board()
-        winner = self.one_move()
+        winner = 0
+        while self.move <= 4 and not winner:
+            self.move += 1
+            self.one_move()
+            winner = self.check()
         if winner == 1:
             print(self.players[0] + ' победил(а)!')
         elif winner == 2:
@@ -93,7 +94,6 @@ class Tic_Tac_Toe:
         print('Ещё раз?[д/н]')
         again = input()
         while(again != 'д' and again != 'н'):
-            print('Ещё раз?[д/н]')
             again = input()
         if again == 'н':
             return 1
