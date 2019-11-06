@@ -1,11 +1,11 @@
 import unittest
-from game2 import Tic_Tac_Toe
+from game import TicTacToe
 
 
 class TestGame(unittest.TestCase):
 
     def setUp(self):
-        self.t = Tic_Tac_Toe()
+        self.t = TicTacToe()
 
     def test_check(self):
         self.t.move = 4

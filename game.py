@@ -1,4 +1,4 @@
-class Tic_Tac_Toe:
+class TicTacToe:
 
     def __init__(self):
         self.players = ['Игрок 1', 'Игрок 2']
@@ -13,6 +13,11 @@ class Tic_Tac_Toe:
             self.check_name(i)
         self.run_game()
 
+    def check_name(self, i):
+        while(self.players[i] == ''):
+            print('Имя не может быть пустой строкой! Попробуйте ещё раз.')
+            self.players[i] = input()
+
     def print_board(self):
         print('-------------')
         for i in range(9):
@@ -21,10 +26,26 @@ class Tic_Tac_Toe:
                 print('|')
                 print('-------------')
 
-    def check_name(self, i):
-        while(self.players[i] == ''):
-            print('Имя не может быть пустой строкой! Попробуйте ещё раз.')
-            self.players[i] = input()
+    def run_game(self):
+        self.print_board()
+        winner = 0
+        while self.move <= 4 and not winner:
+            self.move += 1
+            self.one_move()
+            winner = self.check()
+        if winner == 1:
+            print(self.players[0] + ' победил(а)!')
+        elif winner == 2:
+            print(self.players[1] + ' победил(а)!')
+        else:
+            print('Ничья!')
+        print('Ещё раз?[д/н]')
+        again = input()
+        while(again != 'д' and again != 'н'):
+            again = input()
+        if again == 'н':
+            return 1
+        self.restart()
 
     def one_move(self):
         for i in range(2):
@@ -53,11 +74,6 @@ class Tic_Tac_Toe:
             return 2
         return 0
 
-    def who_win(self, i):
-        if self.board[i] == 'X':
-            return 1
-        return 2
-
     def check(self):
         if self.move >= 3:
             for i in range(3):
@@ -72,33 +88,17 @@ class Tic_Tac_Toe:
                     return self.who_win(4)
         return 0
 
+    def who_win(self, i):
+        if self.board[i] == 'X':
+            return 1
+        return 2
+
     def restart(self):
         self.board = list(range(1, 10))
         self.move = 0
         self.players[0], self.players[1] = self.players[1], self.players[0]
         self.run_game()
 
-    def run_game(self):
-        self.print_board()
-        winner = 0
-        while self.move <= 4 and not winner:
-            self.move += 1
-            self.one_move()
-            winner = self.check()
-        if winner == 1:
-            print(self.players[0] + ' победил(а)!')
-        elif winner == 2:
-            print(self.players[1] + ' победил(а)!')
-        else:
-            print('Ничья!')
-        print('Ещё раз?[д/н]')
-        again = input()
-        while(again != 'д' and again != 'н'):
-            again = input()
-        if again == 'н':
-            return 1
-        self.restart()
-
 
 if __name__ == '__main__':
-    Tic_Tac_Toe().player_names()
+    TicTacToe().player_names()
