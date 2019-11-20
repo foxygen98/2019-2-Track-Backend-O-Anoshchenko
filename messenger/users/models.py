@@ -1,13 +1,32 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-class User(models.Model):
-    name = models.CharField(max_length=32)
-    nick = models.CharField(max_length=16)
-    avatar = models.ImageField()
+class User(AbstractUser):
+    name = models.CharField(max_length=32, verbose_name='Имя')
+    nick = models.CharField(max_length=16, verbose_name='Ник')
+    avatar = models.ImageField(verbose_name='Аватарка')
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
 class Member(models.Model):
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    chat = models.ForeignKey('chats.Chat', on_delete=models.CASCADE)
-    new_messages = models.TextField()
-    last_read_message = models.ForeignKey('chats.Message', on_delete=models.PROTECT)
+    user = models.ForeignKey(
+        'User', 
+        on_delete=models.CASCADE, 
+        verbose_name="id пользователя")
+    chat = models.ForeignKey(
+        'chats.Chat', 
+        on_delete=models.CASCADE, 
+        verbose_name="id чата")
+    new_messages = models.TextField(verbose_name='Новое сообщение')
+    last_read_message = models.ForeignKey(
+        'chats.Message', 
+        on_delete=models.PROTECT, 
+        verbose_name="Последнее прочтенное сообщение"
+        )
+
+    class Meta:
+        verbose_name = 'Участник'
+        verbose_name_plural = 'Участники'
 

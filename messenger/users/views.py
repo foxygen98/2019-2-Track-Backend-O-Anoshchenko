@@ -1,22 +1,16 @@
 from django.http import JsonResponse
+from django.http import HttpResponseNotAllowed
 
-# Create your views here.
 def profile(request, id):
     if request.method == "GET":
-        try:
-            profile = request.GET.get('profile')
-        except Profile.DoesNotExist:
-            raise Http404
+        profile = request.GET.get('profile')
         return JsonResponse({'Name':'Oksana', 'Age':'21'})
     else:
-        raise Http405
+        return HttpResponseNotAllowed(['GET'])
 
 def contacts(request, id):
     if request.method == "GET":
-        try:
-            contacts = request.GET.get('contacts')
-        except Contacts.DoesNotExist:
-            raise Http404
+        contacts = request.GET.get('contacts')
         return JsonResponse({'name': 'Katya', 'phone number': '8 912 345 67 89'})
     else:
-        raise Http405
+        return HttpResponseNotAllowed(['GET'])
