@@ -18,7 +18,7 @@ class Message(models.Model):
     class Meta:
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
-        ordering = ['-added_at']
+        ordering = ('-added_at',)
 
 class Attachment(models.Model):
     chat = models.ForeignKey('Chat', on_delete=models.CASCADE, verbose_name="id чата")
