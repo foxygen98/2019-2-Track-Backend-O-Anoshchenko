@@ -13,7 +13,7 @@ class Message(models.Model):
     chat = models.ForeignKey('Chat', on_delete=models.CASCADE, verbose_name="id чата")
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, verbose_name="id пользователя")
     content = models.TextField(verbose_name='Текст сообщения')
-    added_at = models.DateTimeField(verbose_name="Время отправки")
+    added_at = models.DateTimeField(verbose_name="Время отправки", null=False, auto_now=True)
 
     class Meta:
         verbose_name = 'Сообщение'

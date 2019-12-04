@@ -17,7 +17,9 @@ def contacts(request, id):
 
 def search_profile(request, nick):
     if request.method == "GET":
-        user = User.objects.all()
-        user = user.get(nick = nick)
-        return JsonResponse({'user': user.id, 'nick': user.nick})
+        users = User.objects.filter(nick__icontains = nick) | \
+            User.objects.filter(first_name__icontains = nick) | \
+            User.objects.filter(last_name__icontains = nick)
+        users = users.values('nick', 'first_name', 'last_name')
+        return JsonResponse({'users ': list(users)})
     return HttpResponseNotAllowed(['GET'])
