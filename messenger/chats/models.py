@@ -3,7 +3,7 @@ from django.db import models
 class Chat(models.Model):
     is_group_chat = models.BooleanField(default=False, verbose_name='Групповой чат')
     topic = models.TextField(verbose_name='Тема')
-    last_message = models.TextField(verbose_name='Последнее сообщение')
+    last_message = models.IntegerField(verbose_name='Последнее сообщение', null=True, blank=True)
 
     class Meta:
         verbose_name = 'Чат'
@@ -25,7 +25,7 @@ class Attachment(models.Model):
     message = models.ForeignKey('Message', on_delete=models.CASCADE, verbose_name="id пользователя")
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, verbose_name="id сообщения")
     type_of_attach = models.CharField(max_length=16, default='', verbose_name="Тип вложения")
-    url = models.URLField(verbose_name="Ссылка на вложение")
+    url = models.FileField(upload_to='attachments', verbose_name="Ссылка на вложение")
 
     class Meta:
         verbose_name = 'Вложение'

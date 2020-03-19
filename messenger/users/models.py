@@ -22,7 +22,8 @@ class Member(models.Model):
     last_read_message = models.ForeignKey(
         'chats.Message', 
         on_delete=models.PROTECT, 
-        verbose_name="Последнее прочтенное сообщение"
+        verbose_name="Последнее прочтенное сообщение",
+        null=True
         )
 
     class Meta:

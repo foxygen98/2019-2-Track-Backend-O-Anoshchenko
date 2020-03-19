@@ -4,8 +4,8 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
-    path('chat_list/<int:id>', chat_list, name='chat_list'),
-    path('one_chat/<int:id>/', one_chat, name='one_chat'),
+    path('chat_list/<int:user_id>/', chat_list, name='chat_list'),
+    path('one_chat/<int:chat_id>/', one_chat, name='one_chat'),
     path('create_chat/', csrf_exempt(create_chat), name='create_chat'),
     path('send_message/', csrf_exempt(send_message), name='send_message'),
     path('list_messages/<int:chat_id>', list_messages, name='list_messages'),
