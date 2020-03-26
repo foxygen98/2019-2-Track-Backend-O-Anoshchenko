@@ -16,7 +16,7 @@ class TestUsers(TestCase):
         self.assertEqual(content['profile']['nick'], 'TestNick')
 
     def test_contacts(self):
-        response = self.client.get(reverse('contacts', kwargs={'prof_id': self.user.id}))
+        response = self.client.get(reverse('contacts'))
         self.assertTrue(response.status_code == 200)
         self.assertJSONEqual(response.content, '{"contacts": "test"}')
 

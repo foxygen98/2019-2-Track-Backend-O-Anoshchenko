@@ -58,12 +58,6 @@ class UsersTest(TestCase):
         content = json.loads(response.content)
         self.assertEqual(len(content['messages']), 2)
 
-    #def test_read_message(self):
-    #    response = self.client.post(reverse('read_message'), {'member': self.member1.id})
-    #    self.assertTrue(response.status_code == 200)
-    #    content = json.loads(response.content)
-    #    self.assertEqual(content['last_message'], self.message2.id)
-
     @patch('chats.views.read_message')
     def test_read_message(self, read_message_mock):
         read_message_mock()
