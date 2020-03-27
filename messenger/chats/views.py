@@ -4,6 +4,11 @@ from chats.models import Chat, Message, Attachment
 from users.models import User, Member
 from chats.form import MessageForm, ChatForm
 from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from .serializers import *
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 
 def chat_list(request, user_id):
     if request.method == "GET":
@@ -65,3 +70,67 @@ def upload_file (file):
         aws_access_key_id='shbHSMGMH3z9M5pZuz5rTK',
         aws_secret_access_key='hECFe4Cq1UDQipSPDhv1PNGmLdEbpoQDGZWohESPtSi')
     return s3_client.put_object(Bucket=AWS_STORAGE_BUCKET_NAME, key='attachment', body=openfile.read())
+
+class ChatViewSet(viewsets.ModelViewSet):
+    
+    serializer_class = ChatSerializer
+    queryset = Chat.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == 'chat_list':
+            return MemberSerializer
+        return ChatSerializer
+
+    @action(detail=True, methods=['GET'])
+    def one_chat(self, request, pk):
+        chats = self.get_queryset()
+        chat = get_object_or_404(chats, id=pk)
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(chat, many=False)
+        return Response({'chat': serializer.data})
+
+    @action(detail=True, methods=['GET'])
+    def chat_list(self, request, pk):
+        members = Member.objects.filter(user_id=pk)
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(members, many=True)
+        return Response({'chats': serializer.data})
+
+    @action(detail=False, methods=['POST'])
+    def create_chat(self, request):
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(data=request.POST)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'successfully'})
+        return Response({'errors' : serializer.errors})
+
+class MessageViewSet(viewsets.ModelViewSet):
+
+    serializer_class = MessageSerializer
+    queryset = Message.objects.all()
+
+    @action(detail=True, methods=['GET'])
+    def list_messages(self, request, pk):
+        messages = self.get_queryset().filter(chat_id=pk)
+        serializer_class = self.get_serializer_class()
+        serializers = serializer_class(messages, many=True)
+        return Response({'messages': serializers.data})
+
+    @action(detail=False, methods=['POST'])
+    def send_message(self, request):
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(data=request.POST)
+        if serializer.is_valid():
+            message = serializer.save()
+            return Response({'status': 'successfully'})
+        return Response({'errors' : serializer.errors})
+
+    @action(detail=False, methods=['POST'])
+    def read_message(self, request):
+        member_id = request.POST.get('member')
+        member = get_object_or_404(Member, id=member_id)
+        chat_id = member.chat.id
+        messages = self.get_queryset().filter(chat_id=chat_id).order_by('added_at')
+        member.last_read_message_id = messages.last().id
+        return Response({'status': 'successfully'})
