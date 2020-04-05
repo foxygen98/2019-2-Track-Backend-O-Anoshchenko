@@ -7,7 +7,10 @@ from rest_framework import viewsets
 from .serializers import UserSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 
+@login_required
 def profile(request, prof_id):
     if request.method == "GET":
         profile = User.objects.values('id', 'username', 'nick')
@@ -15,11 +18,14 @@ def profile(request, prof_id):
         return JsonResponse({'profile': profile})
     return HttpResponseNotAllowed(['GET'])
 
+@cache_page(60)
+@login_required
 def contacts(request):
     if request.method == "GET":
         return JsonResponse({'contacts': 'test'})
     return HttpResponseNotAllowed(['GET'])
 
+@login_required
 def search_profile(request, nick):
     if request.method == "GET":
         users = User.objects.filter(
@@ -43,6 +49,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = serializer_class(profile, many=False)
         return  Response({'profile': serializer.data})
 
+    @cache_page(60)
     @action(detail=False, methods=['GET'])
     def contacts(self, request):
         users = self.get_queryset()

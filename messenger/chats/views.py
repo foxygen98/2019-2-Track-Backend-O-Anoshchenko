@@ -8,8 +8,16 @@ from rest_framework import viewsets
 from .serializers import *
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
+import cProfile, pstats
 
+pr = cProfile.Profile()
+pr.enable()
 
+@cache_page(60)
+@login_required
 def chat_list(request, user_id):
     if request.method == "GET":
         user = get_object_or_404(User, id=user_id)
@@ -17,6 +25,11 @@ def chat_list(request, user_id):
         return JsonResponse({'chats' : list(chats_id)})
     return HttpResponseNotAllowed(['GET'])
 
+pr.disable()
+pr.dump_stats("chat_list.prof")
+
+@cache_page(60)
+@login_required
 def one_chat(request, chat_id):
     if request.method == "GET":
         chat = Chat.objects.all()
@@ -24,6 +37,8 @@ def one_chat(request, chat_id):
         return JsonResponse({'chat': chat.id, 'topic': chat.topic, 'last message': chat.last_message})
     return HttpResponseNotAllowed(['GET'])
 
+@csrf_exempt
+@login_required
 def create_chat(request):
     if request.method == "POST":
         form = ChatForm(request.POST)
@@ -36,6 +51,7 @@ def create_chat(request):
         return JsonResponse({'errors' : form.errors})
     return HttpResponseNotAllowed(['POST'])
 
+@csrf_exempt
 def send_message(request):
     if request.method == "POST":
         form = MessageForm(request.POST)
@@ -45,12 +61,16 @@ def send_message(request):
         return JsonResponse({'errors' : form.errors})
     return HttpResponseNotAllowed(['POST'])
 
+
+@login_required
 def list_messages(request, chat_id):
     if request.method == "GET":
         messages = Message.objects.filter(chat=chat_id).values('id', 'content', 'added_at')
         return JsonResponse({'messages' : list(messages)})
     return HttpResponseNotAllowed(['GET'])
 
+@csrf_exempt
+@login_required
 def read_message(request):
     if request.method == "POST":
         member_id = request.POST.get('member')
@@ -61,6 +81,8 @@ def read_message(request):
         return JsonResponse({'last_message' : member.last_read_message_id})
     return HttpResponseNotAllowed(['POST'])
 
+
+@login_required
 def upload_file (file):
     openfile = FileField(open(file, 'rb'))
     session = boto3.session.Session()
@@ -81,6 +103,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             return MemberSerializer
         return ChatSerializer
 
+    @cache_page(60)
     @action(detail=True, methods=['GET'])
     def one_chat(self, request, pk):
         chats = self.get_queryset()
@@ -89,6 +112,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer = serializer_class(chat, many=False)
         return Response({'chat': serializer.data})
 
+    @cache_page(60)
     @action(detail=True, methods=['GET'])
     def chat_list(self, request, pk):
         members = Member.objects.filter(user_id=pk)
@@ -96,6 +120,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer = serializer_class(members, many=True)
         return Response({'chats': serializer.data})
 
+    @csrf_exempt
     @action(detail=False, methods=['POST'])
     def create_chat(self, request):
         serializer_class = self.get_serializer_class()
@@ -117,6 +142,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializers = serializer_class(messages, many=True)
         return Response({'messages': serializers.data})
 
+    @csrf_exempt
     @action(detail=False, methods=['POST'])
     def send_message(self, request):
         serializer_class = self.get_serializer_class()
@@ -126,6 +152,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             return Response({'status': 'successfully'})
         return Response({'errors' : serializer.errors})
 
+    @csrf_exempt
     @action(detail=False, methods=['POST'])
     def read_message(self, request):
         member_id = request.POST.get('member')
