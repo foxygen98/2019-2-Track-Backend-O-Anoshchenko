@@ -11,6 +11,10 @@ from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
+import cProfile, pstats
+
+pr = cProfile.Profile()
+pr.enable()
 
 @cache_page(60)
 @login_required
@@ -20,6 +24,9 @@ def chat_list(request, user_id):
         chats_id = Member.objects.filter(user=user_id).values('chat_id')
         return JsonResponse({'chats' : list(chats_id)})
     return HttpResponseNotAllowed(['GET'])
+
+pr.disable()
+pr.dump_stats("chat_list.prof")
 
 @cache_page(60)
 @login_required
