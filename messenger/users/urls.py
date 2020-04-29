@@ -9,5 +9,6 @@ router.register(r'users', UserViewSet, basename='user')
 urlpatterns = [
     path('<int:prof_id>', profile, name='profile'),
     path('contacts/', contacts, name='contacts'),
-    path('profile/search/<str:nick>', search_profile, name='search_profile')
+    path('profile/search/<str:nick>', search_profile, name='search_profile'),
+    path('create/', create_user, name='create user')
 ] + router.urls

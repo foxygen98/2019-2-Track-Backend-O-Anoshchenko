@@ -13,6 +13,6 @@ urlpatterns = [
     path('one_chat/<int:chat_id>/', one_chat, name='one_chat'),
     path('create_chat/', create_chat, name='create_chat'),
     path('send_message/', send_message, name='send_message'),
-    path('list_messages/<int:chat_id>', list_messages, name='list_messages'),
+    path('messages/<int:chat_id>/', list_messages, name='list_messages'),
     path('read_message/', read_message, name='read_message'),
 ] + router.urls

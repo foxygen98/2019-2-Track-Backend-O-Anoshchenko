@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def profile(request, prof_id):
@@ -35,6 +36,19 @@ def search_profile(request, nick):
         ).values('nick')
         return JsonResponse({'users': list(users)})
     return HttpResponseNotAllowed(['GET'])
+
+@csrf_exempt
+def create_user(request):
+    if "POST" == request.method:
+        form = UserForm(request.POST)
+        if form.is_valid():
+            new_user = form.save()
+            return JsonResponse({
+                'msg': 'Пользователь создан',
+                'id': new_user.id,
+            })
+        return JsonResponse({'errors': form.errors}, status=400)
+    return HttpResponseNotAllowed(['POST'])
 
 class UserViewSet(viewsets.ModelViewSet):
 

@@ -12,11 +12,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
 import cProfile, pstats
+from chats.tasks import send_email
+from cent import Client
 
-pr = cProfile.Profile()
-pr.enable()
-
-@cache_page(60)
 @login_required
 def chat_list(request, user_id):
     if request.method == "GET":
@@ -25,10 +23,6 @@ def chat_list(request, user_id):
         return JsonResponse({'chats' : list(chats_id)})
     return HttpResponseNotAllowed(['GET'])
 
-pr.disable()
-pr.dump_stats("chat_list.prof")
-
-@cache_page(60)
 @login_required
 def one_chat(request, chat_id):
     if request.method == "GET":
@@ -38,7 +32,7 @@ def one_chat(request, chat_id):
     return HttpResponseNotAllowed(['GET'])
 
 @csrf_exempt
-@login_required
+# @login_required
 def create_chat(request):
     if request.method == "POST":
         form = ChatForm(request.POST)
@@ -47,7 +41,8 @@ def create_chat(request):
             chat = form.save()
             user = User.objects.get(id=user_id)
             member = Member.objects.create(user=user, chat=chat)
-            return JsonResponse({'status': 'success!', 'id': chat.id})
+            send_email.delay([user.email])
+            return JsonResponse({'status': 'success!', 'id': chat.id, 'user_email': user.email})
         return JsonResponse({'errors' : form.errors})
     return HttpResponseNotAllowed(['POST'])
 
@@ -57,6 +52,7 @@ def send_message(request):
         form = MessageForm(request.POST)
         if form.is_valid():
             message = form.save()
+            CentrifugeClient.publish(message)
             return JsonResponse({'user' : message.user_id, 'message': message.content})
         return JsonResponse({'errors' : form.errors})
     return HttpResponseNotAllowed(['POST'])
@@ -64,9 +60,10 @@ def send_message(request):
 
 @login_required
 def list_messages(request, chat_id):
-    if request.method == "GET":
-        messages = Message.objects.filter(chat=chat_id).values('id', 'content', 'added_at')
-        return JsonResponse({'messages' : list(messages)})
+    if "GET" == request.method:
+        messages = Message.objects.values('chat', 'user', 'content', 'added_at')
+        messages = messages.filter(chat=chat_id)
+        return JsonResponse({'messages': list(messages)})
     return HttpResponseNotAllowed(['GET'])
 
 @csrf_exempt
@@ -103,7 +100,6 @@ class ChatViewSet(viewsets.ModelViewSet):
             return MemberSerializer
         return ChatSerializer
 
-    @cache_page(60)
     @action(detail=True, methods=['GET'])
     def one_chat(self, request, pk):
         chats = self.get_queryset()
@@ -112,7 +108,6 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer = serializer_class(chat, many=False)
         return Response({'chat': serializer.data})
 
-    @cache_page(60)
     @action(detail=True, methods=['GET'])
     def chat_list(self, request, pk):
         members = Member.objects.filter(user_id=pk)
@@ -149,6 +144,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = serializer_class(data=request.POST)
         if serializer.is_valid():
             message = serializer.save()
+            CentrifugeClient.publish(message)
             return Response({'status': 'successfully'})
         return Response({'errors' : serializer.errors})
 
@@ -161,3 +157,21 @@ class MessageViewSet(viewsets.ModelViewSet):
         messages = self.get_queryset().filter(chat_id=chat_id).order_by('added_at')
         member.last_read_message_id = messages.last().id
         return Response({'status': 'successfully'})
+
+class CentrifugeClient():
+    url = 'http://localhost:8001'
+    api_key = '7ce4568b-accc-4bb9-9daa-a5ec09c2f8c2'
+    channel = 'centrifuge'
+    client = Client(url, api_key, timeout=1)
+
+    @classmethod
+    def publish(cls, message):
+        data = {
+            'status': 'ok',
+            'message': {
+                'id': message.id,
+                'user': message.user_id,
+                'content': message.content,
+            }
+        }
+        cls.client.publish(cls.channel, data)

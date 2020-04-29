@@ -25,7 +25,7 @@ SECRET_KEY = '&==dgm6=^lrx!l-ad&^2h)*in=wd4k99=$0zg9df^-12c)zo1o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['backend', '*']
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
@@ -33,6 +33,17 @@ AWS_S3_ENDPOINT_URL = 'http://hb.bizmrg.com'
 AWS_ACCESS_KEY_ID = 'shbHSMGMH3z9M5pZuz5rTK'
 AWS_SECRET_ACCESS_KEY = 'hECFe4Cq1UDQipSPDhv1PNGmLdEbpoQDGZWohESPtSi'
 AWS_STORAGE_BUCKET_NAME = 'track.anoshchenko'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+
+CELERY_BROKER_URL = 'redis://localhost:6379'  
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'  
+CELERY_ACCEPT_CONTENT = ['application/json']  
+CELERY_RESULT_SERIALIZER = 'json'  
+CELERY_TASK_SERIALIZER = 'json'
 
 # Application definition
 
@@ -49,6 +60,7 @@ INSTALLED_APPS = [
     'chats',
     'social_django',
     'sslserver',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +73,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
 ]
 
 ROOT_URLCONF = 'application.urls'
@@ -152,6 +163,8 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
+
+PROFILE_LOG_BASE = '../'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
